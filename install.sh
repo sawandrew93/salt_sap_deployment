@@ -13,7 +13,8 @@ user_exists=$(su - ndbadm -c "echo \"SELECT user_name FROM users WHERE user_name
 
 set -e  # Exit on error
 LOGFILE="/var/log/install_script.log"
-
+curl -O https://raw.githubusercontent.com/sawandrew93/salt_sap_deployment/refs/heads/main/hdb_param.cfg
+curl -O https://raw.githubusercontent.com/sawandrew93/salt_sap_deployment/refs/heads/main/sap_param.cfg
 if zypper lr | grep -q vglocal; then
     echo "vglocal repository is already enabled"
 else
