@@ -6,7 +6,7 @@ HANA_PORT="30013"
 HANA_DB="NDB"
 NEW_USER="SAPADMIN"
 NEW_PASS="Passw0rd"
-
+CWD=$(pwd)
 #function to check whether database user already exists
 user_exists=$(su - ndbadm -c "echo \"SELECT user_name FROM users WHERE user_name='${NEW_USER}';\" | hdbsql -u ${HANA_USER} -p ${HANA_PASSWORD} -n ${HANA_HOST}:${HANA_PORT} -d ${HANA_DB}" | awk '/^\"SAPADMIN\"$/ {print}' | tr -d '"')
 
@@ -40,7 +40,8 @@ echo "Dependency Packages installation complete!"
 
 
 echo "Replacing components and updating permissions..."
-hdb_param_file=$(find / -type f -name "hdb_param.cfg" 2>/dev/null | head -n 1)
+#hdb_param_file=$(find / -type f -name "hdb_param.cfg" 2>/dev/null | head -n 1)
+hdb_param_file=$CWD/hdb_param.cfg
 cp "$hdb_param_file" /tmp/hdb.cfg
 
 hana_afl_dir=$(find / -type d -name "SAP_HANA_AFL" 2>/dev/null | head -n 1)
@@ -50,6 +51,9 @@ hana_db_dir=$(find / -type d -name "SAP_HANA_DATABASE" 2>/dev/null | head -n 1)
 sed -i "s|hana_afl_dir|${hana_afl_dir}|g" /tmp/hdb.cfg
 sed -i "s|hana_client_dir|${hana_client_dir}|g" /tmp/hdb.cfg
 sed -i "s|hana_db_dir|${hana_db_dir}|g" /tmp/hdb.cfg
+chmod +x -R "$hana_db_dir"
+chmod +x -R "$hana_client_dir"
+chmod +x -R "$hana_afl_dir"
 
 echo "Checking SAP HANA Database installation..."
 
@@ -101,7 +105,8 @@ fi
 echo "Configuring SAP installation prerequisites..."
         sap_dir=$(find / -type d -name "ServerComponents" 2>/dev/null | head -n 1)
         chmod +x -R "$sap_dir"
-        sap_param_file=$(find / -type f -name "sap_param.cfg" 2>/dev/null | head -n 1)
+        #sap_param_file=$(find / -type f -name "sap_param.cfg" 2>/dev/null | head -n 1)
+        sap_param_file=$CWD/sap_param.cfg
         cp "$sap_param_file" /tmp/sap.cfg
         sed -i "s/serverfqdn/$(hostname)/g" /tmp/sap.cfg
 
@@ -116,6 +121,7 @@ else
         cd "$sap_dir"
         ./install -i silent -f /tmp/sap.cfg
         echo "SAP installation completed!"
+        rm /tmp/sap.cfg
     else
         echo "SAP installer directory not found!"
         exit 1
