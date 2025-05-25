@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Change values of below variables if you want
-SID="NDB" #Tenant database name
+SID="ABC" #Tenant database name
 SYSTEM_USER_PW="Passw0rd" #SYSTEM database user password
-NEW_DB_USER="SAPADMIN" #SAPADMIN or as you want
-NEW_DB_USER_PW="Hana@123" #new db user password
+NEW_DB_USER="VGADMIN" #SAPADMIN or as you want
+NEW_DB_USER_PW="V@nguard@929" #new db user password
 B1SITEUSER_PW="Hana@123"
 # Change values of above variables if you want
 
@@ -13,8 +13,7 @@ B1SITEUSER_PW="Hana@123"
 
 
 SID_USER=$(echo "$SID" | tr '[:upper:]' '[:lower:]')adm
-SAP_ADMIN_PW_UPDATE=$NEW_DB_USER_PW
-SYSTEM_ADMIN_PW_UPDATE=$SYSTEM_USER_PW
+
 
 #function to check whether database user already exists
 user_exists=$(
@@ -68,8 +67,8 @@ hana_db_dir=$(find / -type d -name "SAP_HANA_DATABASE" 2>/dev/null | head -n 1)
 sed -i "s|hana_afl_dir|${hana_afl_dir}|g" /tmp/hdb.cfg
 sed -i "s|hana_client_dir|${hana_client_dir}|g" /tmp/hdb.cfg
 sed -i "s|hana_db_dir|${hana_db_dir}|g" /tmp/hdb.cfg
-sed -i "s|sap_admin_pw|${SAP_ADMIN_PW_UPDATE}|g" /tmp/hdb.cfg # to change sap_adm_pw inside /tmp/hdb.cfg with update value from variable
-sed -i "s|system_pw|${SYSTEM_ADMIN_PW_UPDATE}|g" /tmp/hdb.cfg # to change system databse user password inside /tmp/hdb.cfg with update value from variable
+sed -i "s|sap_admin_pw|${NEW_DB_USER_PW}|g" /tmp/hdb.cfg # to change sap_adm_pw inside /tmp/hdb.cfg with update value from variable
+sed -i "s|system_pw|${SYSTEM_USER_PW}|g" /tmp/hdb.cfg # to change system databse user password inside /tmp/hdb.cfg with update value from variable
 sed -i "s|NDB|${SID}|g" /tmp/hdb.cfg # to change sid value inside /tmp/hdb.cfg with update value from variable
 chmod +x -R "$hana_db_dir"
 chmod +x -R "$hana_client_dir"
@@ -122,21 +121,31 @@ EOF"
     fi
 fi
 
+
 #Modifying sap_param.cfg file before using it as input file and giving exec permission on sap installer directory
-echo "Configuring SAP installation prerequisites..."
-        sap_dir=$(find / -type d -name "ServerComponents" 2>/dev/null | head -n 1)
-        if [[ -z "$sap_dir" ]]; then
-            echo "Error: SAP Installer directory not found!"
-            exit 1
-        fi
+echo "Configuring SAP installation prerequisites..." | tee -a "$LOGFILE"
+
+sap_dir=$(find / -type d -name "ServerComponents" 2>/dev/null | head -n 1)
+if [[ -d "$sap_dir" ]]; then
         chmod +x -R "$sap_dir"
-        sap_param_file=$(find / -type f -name "sap_param.cfg" 2>/dev/null | head -n 1)
-        cp "$sap_param_file" /tmp/sap.cfg
-        sed -i "s/serverfqdn/$(hostname)/g" /tmp/sap.cfg
-        sed -i "s/NDB/${SID}/g" /tmp/sap.cfg
-        sed -i "s/SAPADMIN/${NEW_DB_USER}/g" /tmp/sap.cfg
-        sed -i "s/SAPADMIN_PW/${NEW_DB_USER_PW}/g" /tmp/sap.cfg
-        sed -i "s/B1SITEUSER_PW/${B1SITEUSER_PW}/g" /tmp/sap.cfg
+else
+        echo "SAP installer directory not found!" | tee -a "$LOGFILE"
+        exit 1
+fi
+chmod +x -R "$sap_dir"
+sap_param_file=$(find / -type f -name "sap_param.cfg" 2>/dev/null | head -n 1)
+if [ -z "$sap_param_file" ]; then
+    echo "Error: 'sap_param.cfg' file not found." | tee -a "$LOGFILE"
+    exit 1
+fi
+cp "$sap_param_file" /tmp/sap.cfg
+sed -i "s/serverfqdn/$(hostname)/g" /tmp/sap.cfg
+sed -i "s|B1SITEUSER_PW|${B1SITEUSER_PW}|g" /tmp/sap.cfg
+sed -i "s/^HANA_DATABASE_USER_ID=.*/HANA_DATABASE_USER_ID=${NEW_DB_USER}/" /tmp/sap.cfg
+sed -i "s/^HANA_DATABASE_USER_PASSWORD=.*/HANA_DATABASE_USER_PASSWORD=${NEW_DB_USER_PW}/" /tmp/sap.cfg
+sed -i "s/^HANA_DATABASE_TENANT_DB=.*/HANA_DATABASE_TENANT_DB=${SID}/" /tmp/sap.cfg
+sed -i -E "s|(BCKP_HANA_SERVERS=.*tenant-db=\")[^\"]*(\" user=\")[^\"]*(\" password=\")[^\"]*(\")|\1${SID}\2${NEW_DB_USER}\3${NEW_DB_USER_PW}\4|" /tmp/sap.cfg
+
 
 #install SAP
 echo "Checking SAP installation status..." | tee -a "$LOGFILE"
