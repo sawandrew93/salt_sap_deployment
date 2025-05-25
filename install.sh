@@ -62,9 +62,9 @@ if su - ndbadm -c "HDB version" &>/dev/null; then
     su - ndbadm -c "HDB version"  # This will display the version info
 else
     if [[ -d "$hana_db_dir" ]]; then
-        echo "Installing HANA Database services..."
+        echo "Installing HANA Database services..." | tee -a "$LOGFILE"
         cd "$hana_db_dir"
-        ./hdblcm --batch --configfile="/tmp/hdb.cfg"
+        ./hdblcm --batch --configfile="/tmp/hdb.cfg" &>> "$LOGFILE"
         rm /tmp/hdb.cfg
         echo "Installation completed!" | tee -a "$LOGFILE"
     else
@@ -111,19 +111,19 @@ echo "Configuring SAP installation prerequisites..."
         sed -i "s/serverfqdn/$(hostname)/g" /tmp/sap.cfg
 
 #install SAP
-echo "Checking SAP installation status..."
+echo "Checking SAP installation status..." | tee -a "$LOGFILE"
 
 if systemctl list-units --type=service | grep -q "sapb1servertools.service"; then
-    echo "SAP is already installed."
+    echo "SAP is already installed." | tee -a "$LOGFILE"
 else
-    echo "Starting SAP installation..."
+    echo "Starting SAP installation..." | tee -a "$LOGFILE"
     if [[ -d "$sap_dir" ]]; then
         cd "$sap_dir"
-        ./install -i silent -f /tmp/sap.cfg
-        echo "SAP installation completed!"
+        ./install -i silent -f /tmp/sap.cfg &>> "$LOGFILE"
+        echo "SAP installation completed!" | tee -a "$LOGFILE"
         rm /tmp/sap.cfg
     else
-        echo "SAP installer directory not found!"
+        echo "SAP installer directory not found!" | tee -a "$LOGFILE"
         exit 1
     fi
 fi
