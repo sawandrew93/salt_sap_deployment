@@ -86,12 +86,12 @@ else
         echo "Installing HANA Database services..." | tee -a "$LOGFILE"
         cd "$hana_db_dir"
         ./hdblcm --batch --configfile="/tmp/hdb.cfg" 2>&1 | tee -a "$LOGFILE"
-        rm /tmp/hdb.cfg
         echo "Installation completed!" | tee -a "$LOGFILE"
     else
         echo "Cannot find HANA installer directory." | tee -a "$LOGFILE"
     fi
 fi
+
 
 #DB user creation
 if [[ "$user_exists" == "$NEW_DB_USER" ]]; then
@@ -158,9 +158,12 @@ else
         cd "$sap_dir"
         ./install -i silent -f /tmp/sap.cfg --debug 2>&1 | tee -a "$LOGFILE"
         echo "SAP installation completed!" | tee -a "$LOGFILE"
-        rm /tmp/sap.cfg
     else
         echo "SAP installer directory not found!" | tee -a "$LOGFILE"
         exit 1
     fi
 fi
+rm hdb_param.cfg
+rm sap_param.cfg
+rm /tmp/sap.cfg
+rm /tmp/hdb.cfg
