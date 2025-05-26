@@ -130,11 +130,20 @@ GRANT \"CREATE SCHEMA\",\"USER ADMIN\",\"ROLE ADMIN\",\"CATALOG READ\" TO ${NEW_
 GRANT \"CREATE ANY\",\"SELECT\" ON SCHEMA \"SYSTEM\" TO ${NEW_DB_USER} WITH GRANT OPTION;
 GRANT \"SELECT\",\"EXECUTE\",\"DELETE\" ON SCHEMA \"_SYS_REPO\" TO ${NEW_DB_USER} WITH GRANT OPTION;
 EOF"
-
     if [[ $? -eq 0 ]]; then
         echo "User ${NEW_DB_USER} created and privileges granted successfully." | tee -a "$LOGFILE"
     else
         echo "Error creating hana database user ${NEW_DB_USER}." | tee -a "$LOGFILE"
+        exit 1
+    fi
+    su - $SID_USER -c "hdbsql -u SYSTEM -p ${SYSTEM_USER_PW} -n localhost:30013 <<EOF
+ALTER DATABASE NDB ADD 'scriptserver'
+EOF"
+
+    if [[ $? -eq 0 ]]; then
+        echo "Script server has been added successfully." | tee -a "$LOGFILE"
+    else
+        echo "Error adding script server." | tee -a "$LOGFILE"
         exit 1
     fi
 fi
@@ -182,7 +191,7 @@ else
 fi
 
 #remove config files after installation
-rm hdb_param.cfg
-rm sap_param.cfg
+rm $hdb_param_file
+rm $sap_param_file
 rm /tmp/sap.cfg
 rm /tmp/hdb.cfg
