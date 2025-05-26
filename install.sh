@@ -1,15 +1,60 @@
 #!/bin/bash
+# Default values for non-password variables
+SID="NDB"
+NEW_DB_USER="SAPADMIN"
 
-# Change values of below variables if you want
-SID="NDB" #Tenant database name
-SYSTEM_USER_PW="Passw0rd" #SYSTEM database user password
-NEW_DB_USER="SAPADMIN" #SAPADMIN or as you want
-NEW_DB_USER_PW="H@na@123" #new db user password
-B1SITEUSER_PW="Hana@123"
-# Change values of above variables if you want
+# Function to request user input
+prompt_with_default() {
+    local var_name=$1
+    local default_value=$2
+    local prompt_message=$3
 
+    echo -n "$prompt_message [default: $default_value]: "
+    read input
+    eval "$var_name=\"\${input:-$default_value}\""
+}
 
+# Function to request password
+prompt_password_confirm() {
+    local var_name=$1
+    local prompt_message=$2
 
+    while true; do
+        echo -n "$prompt_message: "
+        read pw1
+
+        echo -n "Confirm $prompt_message: "
+        read pw2
+
+        echo "You entered: $pw2"
+
+        if [[ "$pw1" == "$pw2" ]]; then
+            eval "$var_name=\"\$pw1\""
+            break
+        else
+            echo "Passwords do not match. Please try again."
+        fi
+    done
+}
+
+# Input prompts
+prompt_with_default SID "$SID" "Enter Tenant Database Name (SID)"
+prompt_password_confirm SYSTEM_USER_PW "Enter SYSTEM User Password"
+prompt_with_default NEW_DB_USER "$NEW_DB_USER" "Enter New DB User"
+prompt_password_confirm NEW_DB_USER_PW "Enter New DB User Password"
+prompt_password_confirm B1SITEUSER_PW "Enter B1SiteUser Password"
+
+# Summary 
+echo -e "\nConfiguration Summary:"
+echo "SID: $SID"
+echo "SYSTEM_USER_PW: $SYSTEM_USER_PW"
+echo "NEW_DB_USER: $NEW_DB_USER"
+echo "NEW_DB_USER_PW: $NEW_DB_USER_PW"
+echo "B1SITEUSER_PW: $B1SITEUSER_PW"
+
+# Wait for user to continue
+echo
+read -p "Press Enter to continue..."
 
 
 SID_USER=$(echo "$SID" | tr '[:upper:]' '[:lower:]')adm
@@ -23,7 +68,7 @@ user_exists=$(
 
 #set log file directory and dowload hana and sap parameters from github repo
 set -e  # Exit on error
-LOGFILE="/var/log/install_script.log"
+LOGFILE="/var/log/install_script_$(date '+%Y-%m-%d').log"
 curl -O https://raw.githubusercontent.com/sawandrew93/salt_sap_deployment/refs/heads/main/hdb_param.cfg
 curl -O https://raw.githubusercontent.com/sawandrew93/salt_sap_deployment/refs/heads/main/sap_param.cfg
 
