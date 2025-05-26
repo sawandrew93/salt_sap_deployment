@@ -191,7 +191,6 @@ else
 fi
 
 #remove config files after installation
-rm $hdb_param_file
-rm $sap_param_file
-rm /tmp/sap.cfg
-rm /tmp/hdb.cfg
+rm "$hdb_param_file"
+rm "$sap_param_file"
+rm /tmp/sap.cfg /tmp/hdb.cfg
