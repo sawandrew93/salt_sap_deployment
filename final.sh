@@ -1,4 +1,7 @@
 #!/bin/bash
+#set log file directory
+set -e  # Exit on error
+LOGFILE="/var/log/install_script_$(date '+%Y-%m-%d').log"
 
 # Default values for non-password variables
 SID="NDB"
@@ -40,10 +43,10 @@ prompt_password_confirm() {
 
 # Input prompts
 prompt_with_default SID "$SID" "Enter Tenant Database Name (SID)"
-prompt_password_confirm SYSTEM_USER_PW "Enter SYSTEM User Password"
+prompt_password_confirm SYSTEM_USER_PW "Set SYSTEM User Password"
 prompt_with_default NEW_DB_USER "$NEW_DB_USER" "Enter New DB User"
-prompt_password_confirm NEW_DB_USER_PW "Enter New DB User Password"
-prompt_password_confirm B1SITEUSER_PW "Enter B1SiteUser Password"
+prompt_password_confirm NEW_DB_USER_PW "Set Password for New DB User"
+prompt_password_confirm B1SITEUSER_PW "Set B1SiteUser Password"
 echo "Choose an option:"
 echo "1. I have downloaded HANA and SAP installers and extracted with SAPCAR"
 echo "2. I want to download from Google Drive"
@@ -161,9 +164,8 @@ user_exists=$(
   | tr -d '"'
 )
 
-#set log file directory and dowload hana and sap parameters from github repo
-set -e  # Exit on error
-LOGFILE="/var/log/install_script_$(date '+%Y-%m-%d').log"
+#dowload hana and sap parameters from github repo
+
 curl -O https://raw.githubusercontent.com/sawandrew93/salt_sap_deployment/refs/heads/main/hdb_param.cfg
 curl -O https://raw.githubusercontent.com/sawandrew93/salt_sap_deployment/refs/heads/main/sap_param.cfg
 
