@@ -321,8 +321,8 @@ else
     fi
 fi
 
-#HANA DB user creation, disable password expiration and adding script server
-#Note disabling password expiration and adding scrip server won't be executed if the same database user name already exists
+#HANA DB user creation, disable password expiration
+#Note disabling password expiration won't be executed if the same database user name already exists
 if [[ "$user_exists" == "$NEW_DB_USER" ]]; then
     echo "User ${NEW_DB_USER} already exists. Skipping creation."
 else
@@ -349,6 +349,7 @@ EOF"
     fi    
 fi
 
+# add script server
 su - $SID_USER -c "hdbsql -u SYSTEM -p ${SYSTEM_USER_PW} -n localhost:30013 <<EOF
 ALTER DATABASE ${SID} ADD 'scriptserver'
 EOF"
