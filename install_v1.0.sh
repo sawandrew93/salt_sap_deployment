@@ -57,7 +57,7 @@ read -p "Enter your choice (1 or 2 or 3): " user_choice
 if [[ "$user_choice" == "2" ]]; then
 
   # Prompt user for Google Drive folder ID
-  read -p "Enter the Google Drive folder ID: " GDRIVE_URL
+  read -p "Enter the Google Drive shared folder URL or ID: " GDRIVE_URL
 
   if [[ $GDRIVE_URL =~ drive\.google\.com\/drive\/folders\/([a-zA-Z0-9_-]+) ]]; then
     FOLDER_ID=${BASH_REMATCH[1]}
