@@ -46,7 +46,7 @@ prompt_with_default SID "$SID" "Please enter tenant database name (SID)"
 SID_USER=$(echo "$SID" | tr '[:upper:]' '[:lower:]')adm
 prompt_password_confirm SYSTEM_USER_PW "Please enter password for SYSTEM User"
 prompt_with_default NEW_DB_USER "$NEW_DB_USER" "Please enter new database username"
-prompt_password_confirm NEW_DB_USER_PW "Please enter password for new database user Note: This Password will also be used for the $SID_USER user account"
+prompt_password_confirm NEW_DB_USER_PW "Please enter password for $NEW_DB_USER user Note: This Password will also be used for the $SID_USER user account"
 prompt_password_confirm B1SITEUSER_PW "Please enter password for B1SiteUser"
 echo "Choose an option to proceed: You can check the log file at $LOGFILE"
 echo "1. I have downloaded HANA and SAP installers and extracted with SAPCAR"
