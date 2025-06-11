@@ -262,6 +262,14 @@ for pkg in $PACKAGES; do
     fi
 done
 
+for pkg in $PACKAGES; do
+    if ! rpm -q $pkg &>/dev/null; then
+        echo "Failed to install $pkg..." | tee -a "$LOGFILE"
+        echo "Install $pkg manually and then re-run the script..." | tee -a "$LOGFILE"
+        exit 1;
+    fi
+done
+
 echo "Dependency Packages installation complete!" | tee -a "$LOGFILE"
 
 
