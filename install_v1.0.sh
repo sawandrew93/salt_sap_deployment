@@ -3,6 +3,66 @@
 set +e  # Allow script to continue even after errors
 LOGFILE="/var/log/install_script_$(date '+%Y-%m-%d_%H-%M').log"
 
+
+# Define required mount points and expected filesystems
+declare -A expected_fs
+expected_fs["/usr/sap"]="ext4,xfs"
+expected_fs["/hana/data"]="xfs"
+expected_fs["/hana/shared"]="xfs"
+expected_fs["/hana/log"]="xfs"
+
+# Track issues
+missing_mounts=()
+wrong_fs=()
+
+# Check each mount point
+for mount_point in "${!expected_fs[@]}"; do
+  # Check if mounted
+  if mountpoint -q "$mount_point"; then
+    # Get actual filesystem type
+    fs_type=$(findmnt -n -o FSTYPE --target "$mount_point")
+    allowed_fs=${expected_fs[$mount_point]}
+    
+    # Convert allowed_fs string to array and check match
+    match=false
+    IFS=',' read -ra fs_array <<< "$allowed_fs"
+    for fs in "${fs_array[@]}"; do
+      if [[ "$fs_type" == "$fs" ]]; then
+        match=true
+        break
+      fi
+    done
+
+    if ! $match; then
+      wrong_fs+=("$mount_point (found: $fs_type, expected: $allowed_fs)")
+    fi
+  else
+    missing_mounts+=("$mount_point")
+  fi
+done
+
+# Final evaluation
+if [ ${#missing_mounts[@]} -eq 0 ] && [ ${#wrong_fs[@]} -eq 0 ]; then
+  echo "✅ All required partitions are mounted and have valid filesystem types."
+  # Proceed here
+else
+  if [ ${#missing_mounts[@]} -gt 0 ]; then
+    echo "❌ Missing mounted partitions:"
+    for mp in "${missing_mounts[@]}"; do
+      echo " - $mp"
+    done
+  fi
+  if [ ${#wrong_fs[@]} -gt 0 ]; then
+    echo "❌ Partitions with incorrect filesystem types:"
+    for fs_issue in "${wrong_fs[@]}"; do
+      echo " - $fs_issue"
+    done
+  fi
+  echo "Aborting operation."
+  exit 1
+fi
+
+
 # Default values for non-password variables
 SID="NDB"
 NEW_DB_USER="SAPADMIN"
