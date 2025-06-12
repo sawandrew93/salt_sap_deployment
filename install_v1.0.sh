@@ -112,10 +112,6 @@ if [[ "$user_choice" == "2" ]]; then
 
   echo "Extraction complete. Files are in: $(pwd)" | tee -a "$LOGFILE"
 
-  # Apply exec permission recursively
-  #echo "Setting permissions..." | tee -a "$LOGFILE"
-  #chmod -R +x .
-
   # Find the SAPCAR executable
   SAPCAR_EXE=$(find . -iname "SAPCAR_*.EXE" | head -n 1)
 
@@ -184,10 +180,6 @@ elif [[ "$user_choice" == "3" ]]; then
   done
 
   echo "Extraction complete. Files are in: $(pwd)"
-
-  # Apply exec permission recursively
-  #echo "Setting permissions..."
-  #chmod -R +x .
 
   # Find the SAPCAR executable (assuming only one match like SAPCAR-123123.EXE)
   SAPCAR_EXE=$(find . -iname "SAPCAR_*.EXE" | head -n 1)
@@ -393,7 +385,13 @@ if [ -z "$sap_param_file" ]; then
     echo "Error: 'sap_param.cfg' file not found." | tee -a "$LOGFILE"
     exit 1
 fi
+
+#Find SAP installer file directory to change repository path value in sap parameter file
+sap_installer_file=$(find / -type f -iname "SAP_Software_Use_Rights.pdf" 2>/dev/null | head -n 1)
+sap_installer_path=$(dirname "$sap_installer_file")
+
 cp "$sap_param_file" /tmp/sap.cfg
+sed -i "s/installer_path/$(sap_installer_path)/g" /tmp/sap.cfg
 sed -i "s/serverfqdn/$(hostname)/g" /tmp/sap.cfg
 sed -i "s|B1SITEUSER_PW|${B1SITEUSER_PW}|g" /tmp/sap.cfg
 sed -i "s/^HANA_DATABASE_USER_ID=.*/HANA_DATABASE_USER_ID=${NEW_DB_USER}/" /tmp/sap.cfg
