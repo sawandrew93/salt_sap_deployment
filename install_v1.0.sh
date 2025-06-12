@@ -98,6 +98,7 @@ if [[ "$user_choice" == "2" ]]; then
   find . -type f -iname "*.zip" ! -iname "*Integration.zip" ! -iname "*AddOns.zip" | while read -r zip_file; do
     echo "Extracting ZIP file: $zip_file"
     unzip -o "$zip_file" -d "$(dirname "$zip_file")"
+    chmod -R +x .
     rm "$zip_file"
   done
 
@@ -105,13 +106,15 @@ if [[ "$user_choice" == "2" ]]; then
   find . -type f -iname "*.rar" | while read -r rar_file; do
     echo "Extracting RAR file: $rar_file"
     unar -f -o "$(dirname "$rar_file")" "$rar_file"
+    chmod -R +x .
+    rm "$rar_file"
   done
 
   echo "Extraction complete. Files are in: $(pwd)" | tee -a "$LOGFILE"
 
   # Apply exec permission recursively
-  echo "Setting permissions..." | tee -a "$LOGFILE"
-  chmod -R +x .
+  #echo "Setting permissions..." | tee -a "$LOGFILE"
+  #chmod -R +x .
 
   # Find the SAPCAR executable
   SAPCAR_EXE=$(find . -iname "SAPCAR_*.EXE" | head -n 1)
@@ -147,6 +150,7 @@ if [[ "$user_choice" == "2" ]]; then
       # Run extraction
       echo "Extracting $sar_file with $sapcar_local" | tee -a "$LOGFILE"
       ./"$sapcar_local" -manifest SIGNATURE.SMF -xvf "$sar_file"
+      chmod -R +x .
     )
   done
 
@@ -167,6 +171,7 @@ elif [[ "$user_choice" == "3" ]]; then
   find . -type f -iname "*.zip" ! -iname "*Integration.zip" ! -iname "*AddOns.zip" | while read -r zip_file; do
     echo "Extracting ZIP file: $zip_file"
     unzip -o "$zip_file" -d "$(dirname "$zip_file")"
+    chmod -R +x .
     rm "$zip_file"
   done
 
@@ -174,13 +179,15 @@ elif [[ "$user_choice" == "3" ]]; then
   find . -type f -iname "*.rar" | while read -r rar_file; do
     echo "Extracting RAR file: $rar_file"
     unar -f -o "$(dirname "$rar_file")" "$rar_file"
+    chmod -R +x .
+    rm "$rar_file"
   done
 
   echo "Extraction complete. Files are in: $(pwd)"
 
   # Apply exec permission recursively
-  echo "Setting permissions..."
-  chmod -R +x .
+  #echo "Setting permissions..."
+  #chmod -R +x .
 
   # Find the SAPCAR executable (assuming only one match like SAPCAR-123123.EXE)
   SAPCAR_EXE=$(find . -iname "SAPCAR_*.EXE" | head -n 1)
@@ -214,6 +221,8 @@ elif [[ "$user_choice" == "3" ]]; then
       # Run extraction
       echo "Extracting $sar_file with $sapcar_local"
       ./"$sapcar_local" -manifest SIGNATURE.SMF -xvf "$sar_file"
+
+      chmod -R +x .
 
       # Delete .SAR files after extraction
       rm "$sar_file"
