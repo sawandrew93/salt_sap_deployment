@@ -451,7 +451,7 @@ sap_installer_file=$(find / -type f -iname "SAP_Software_Use_Rights.pdf" 2>/dev/
 sap_installer_path=$(dirname "$sap_installer_file")
 
 cp "$sap_param_file" /tmp/sap.cfg
-sed -i "s/installer_path/$(sap_installer_path)/g" /tmp/sap.cfg
+sed -i "s|installer_path|$sap_installer_path|g" /tmp/sap.cfg
 sed -i "s/serverfqdn/$(hostname)/g" /tmp/sap.cfg
 sed -i "s|B1SITEUSER_PW|${B1SITEUSER_PW}|g" /tmp/sap.cfg
 sed -i "s/^HANA_DATABASE_USER_ID=.*/HANA_DATABASE_USER_ID=${NEW_DB_USER}/" /tmp/sap.cfg
@@ -460,11 +460,29 @@ sed -i "s/^HANA_DATABASE_TENANT_DB=.*/HANA_DATABASE_TENANT_DB=${SID}/" /tmp/sap.
 sed -i -E "s|(BCKP_HANA_SERVERS=.*tenant-db=\")[^\"]*(\" user=\")[^\"]*(\" password=\")[^\"]*(\")|\1${SID}\2${NEW_DB_USER}\3${NEW_DB_USER_PW}\4|" /tmp/sap.cfg
 
 
-#install SAP
+#install SAP if the same SLD version is not installed yet
 echo "Checking SAP installation status..." | tee -a "$LOGFILE"
+# Extract installed SLD version as draft
+installed_sld=$(rpm -qa | grep -i B1ServerToolsSLD | head -n1)
 
-if systemctl list-units --type=service | grep -q "sapb1servertools.service"; then
-    echo "SAP is already installed." | tee -a "$LOGFILE"
+# Extract installed version exactly
+installed_ver=$(echo "$installed_sld" | sed -E 's/.*-([0-9]+\.[0-9]+)-.*/\1/')
+
+# Extract installer version from info.txt (line 2)
+info_file="$sap_installer_path/info.txt"
+
+# Get the second line as version is inclued in 2nd line
+installer_ver=$(sed -n '2p' "$info_file")
+
+# Remove all dots for clean numeric comparison
+clean_installed=$(echo "$installed_ver" | tr -d '.\r' | xargs)
+clean_installer=$(echo "$installer_ver" | tr -d '.\r' | xargs)
+
+echo "Installed Version: $clean_installed"
+echo "New Version: $clean_installer"
+
+if [[ "$clean_installed" == "$clean_installer" ]]; then
+    echo "Same SAP SLD version is already installed." | tee -a "$LOGFILE"
 else
     echo "Starting SAP installation..." | tee -a "$LOGFILE"
     if [[ -d "$sap_dir" ]]; then
