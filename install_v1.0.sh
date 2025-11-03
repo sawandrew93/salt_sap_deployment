@@ -306,7 +306,7 @@ if zypper lr | grep -q vglocal; then
     echo "vglocal repository is already enabled" | tee -a "$LOGFILE"
 else
     echo "Adding local repository..." | tee -a "$LOGFILE"
-    zypper addrepo -G http://121.54.164.70/15-SP3/ vglocal
+    zypper addrepo -G http://repo.vanguardmm.com/15-SP3/ vglocal
 fi
 
 echo "Checking and installing required packages..." | tee -a "$LOGFILE"
