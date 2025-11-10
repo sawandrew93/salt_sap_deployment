@@ -297,8 +297,8 @@ user_exists=$(
 
 #dowload hana and sap parameters from github repo
 
-curl -O http://raw.githubusercontent.com/sawandrew93/salt_sap_deployment/refs/heads/main/hdb_param.cfg || { echo "Failed to download hdb_param.cfg" | tee -a "$LOGFILE"; exit 1; }
-curl -O http://raw.githubusercontent.com/sawandrew93/salt_sap_deployment/refs/heads/main/sap_param.cfg || { echo "Failed to download sap_param.cfg" | tee -a "$LOGFILE"; exit 1; }
+curl -O https://raw.githubusercontent.com/sawandrew93/salt_sap_deployment/refs/heads/main/hdb_param.cfg || { echo "Failed to download hdb_param.cfg" | tee -a "$LOGFILE"; exit 1; }
+curl -O https://raw.githubusercontent.com/sawandrew93/salt_sap_deployment/refs/heads/main/sap_param.cfg || { echo "Failed to download sap_param.cfg" | tee -a "$LOGFILE"; exit 1; }
 
 
 #dependency checking
