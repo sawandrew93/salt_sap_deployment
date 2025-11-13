@@ -321,7 +321,7 @@ fi
 echo "Checking and installing required packages..." | tee -a "$LOGFILE"
 
 PACKAGES="jq libatomic1 rpm-build xmlstarlet python3-pyOpenSSL bc glibc-i18ndata \
-          libcap-progs libicu60_2 insserv-compat nfs-kernel-server"
+          libcap-progs libicu60_2 insserv-compat nfs-kernel-server libidn11"
 
 for pkg in $PACKAGES; do
     if ! rpm -q $pkg &>/dev/null; then
