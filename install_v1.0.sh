@@ -420,7 +420,7 @@ fi
 
 # add script server
 su - $SID_USER -c "hdbsql -u SYSTEM -p ${SYSTEM_USER_PW} -n localhost:30013 <<EOF
-ALTER DATABASE ${SID} ADD 'scriptserver'
+ALTER DATABASE ${SID} ADD 'scriptserver';
 EOF"
 
 if [[ $? -eq 0 ]]; then
