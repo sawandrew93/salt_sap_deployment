@@ -295,21 +295,9 @@ user_exists=$(
   | tr -d '"'
 )
 
-# Download hana and sap parameter files using GitHub API
-curl -fSL -H "Accept: application/vnd.github.v3.raw" \
-     -o hdb_param.cfg \
-     https://api.github.com/repos/sawandrew93/salt_sap_deployment/contents/hdb_param.cfg?ref=main || { 
-         echo "Failed to download hdb_param.cfg" | tee -a "$LOGFILE"; exit 1; 
-     }
+curl -O https://raw.githubusercontent.com/sawandrew93/salt_sap_deployment/refs/heads/main/hdb_param.cfg 
 
-# Download sap_param.cfg using GitHub API
-curl -fSL -H "Accept: application/vnd.github.v3.raw" \
-     -o sap_param.cfg \
-     https://api.github.com/repos/sawandrew93/salt_sap_deployment/contents/sap_param.cfg?ref=main || { 
-         echo "Failed to download sap_param.cfg" | tee -a "$LOGFILE"; exit 1; 
-     }
-
-
+curl -O https://raw.githubusercontent.com/sawandrew93/salt_sap_deployment/refs/heads/main/sap_param.cfg
 #dependency checking
 if zypper lr | grep -q vglocal; then
     echo "vglocal repository is already enabled" | tee -a "$LOGFILE"
