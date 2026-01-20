@@ -295,9 +295,54 @@ user_exists=$(
   | tr -d '"'
 )
 
-curl -O https://raw.githubusercontent.com/sawandrew93/salt_sap_deployment/refs/heads/main/hdb_param.cfg || echo "Failed to download hdb_param.cfg" | tee -a "$LOGFILE"; exit 1; 
+# Robust download helper (used only as fallback if local param files aren't present)
+download_file() {
+  local url="$1"
+  local outfile="$2"
 
-curl -O https://raw.githubusercontent.com/sawandrew93/salt_sap_deployment/refs/heads/main/sap_param.cfg || echo "Failed to download sap_param.cfg" | tee -a "$LOGFILE"; exit 1; 
+  # -f : fail on HTTP errors
+  # -S : show error
+  # -L : follow redirects
+  # --retry : retry transient errors
+  # --retry-connrefuse : retry on connection refused
+  # --connect-timeout : timeout for connect
+  # --max-time : total time limit
+  curl -fSL --retry 5 --retry-delay 3 --retry-connrefuse \
+       --connect-timeout 15 --max-time 120 -o "$outfile" "$url" 2>>"$LOGFILE"
+  return $?
+}
+
+# Prefer local installer-provided files; otherwise download as fallback to /tmp
+hdb_param_file=$(find / -type f -name "hdb_param.cfg" 2>/dev/null | head -n 1)
+if [[ -z "$hdb_param_file" ]]; then
+  HDB_URL="https://raw.githubusercontent.com/sawandrew93/salt_sap_deployment/refs/heads/main/hdb_param.cfg"
+  hdb_param_file="/tmp/hdb_param.cfg"
+  echo "No local hdb_param.cfg found. Downloading from $HDB_URL" | tee -a "$LOGFILE"
+  if ! download_file "$HDB_URL" "$hdb_param_file"; then
+    echo "Failed to download hdb_param.cfg from $HDB_URL" | tee -a "$LOGFILE"
+    echo "Verbose curl output:" | tee -a "$LOGFILE"
+    curl -v --connect-timeout 15 --max-time 30 "$HDB_URL" 2>&1 | tee -a "$LOGFILE"
+    exit 1
+  fi
+else
+  echo "Using local hdb_param.cfg found at $hdb_param_file" | tee -a "$LOGFILE"
+fi
+
+sap_param_file=$(find / -type f -name "sap_param.cfg" 2>/dev/null | head -n 1)
+if [[ -z "$sap_param_file" ]]; then
+  SAP_URL="https://raw.githubusercontent.com/sawandrew93/salt_sap_deployment/refs/heads/main/sap_param.cfg"
+  sap_param_file="/tmp/sap_param.cfg"
+  echo "No local sap_param.cfg found. Downloading from $SAP_URL" | tee -a "$LOGFILE"
+  if ! download_file "$SAP_URL" "$sap_param_file"; then
+    echo "Failed to download sap_param.cfg from $SAP_URL" | tee -a "$LOGFILE"
+    echo "Verbose curl output:" | tee -a "$LOGFILE"
+    curl -v --connect-timeout 15 --max-time 30 "$SAP_URL" 2>&1 | tee -a "$LOGFILE"
+    exit 1
+  fi
+else
+  echo "Using local sap_param.cfg found at $sap_param_file" | tee -a "$LOGFILE"
+fi
+
 #dependency checking
 if zypper lr | grep -q vglocal; then
     echo "vglocal repository is already enabled" | tee -a "$LOGFILE"
@@ -334,8 +379,8 @@ echo "Dependency Packages installation complete!" | tee -a "$LOGFILE"
 
 #Modifying hdb_param.cfg file before using it as input file and giving exec permission on hana installer directory
 echo "Modifying hdb_param.cfg file and giving exec permissions on hana installer directory..." | tee -a "$LOGFILE"
-hdb_param_file=$(find / -type f -name "hdb_param.cfg" 2>/dev/null | head -n 1)
-cp "$hdb_param_file" /tmp/hdb.cfg
+# if we used a downloaded file the path is already in $hdb_param_file, otherwise we copy installer file to /tmp/hdb.cfg to work on it
+cp "$hdb_param_file" /tmp/hdb.cfg 2>/dev/null || { echo "Failed to copy $hdb_param_file to /tmp/hdb.cfg" | tee -a "$LOGFILE"; exit 1; }
 
 hana_afl_dir=$(find / -type d -name "SAP_HANA_AFL" 2>/dev/null | head -n 1)
 hana_client_dir=$(find / -type d -name "SAP_HANA_CLIENT" 2>/dev/null | head -n 1)
@@ -437,7 +482,7 @@ else
         echo "SAP installer directory not found!" | tee -a "$LOGFILE"
         exit 1
 fi
-sap_param_file=$(find / -type f -name "sap_param.cfg" 2>/dev/null | head -n 1)
+
 if [ -z "$sap_param_file" ]; then
     echo "Error: 'sap_param.cfg' file not found." | tee -a "$LOGFILE"
     exit 1
@@ -493,6 +538,11 @@ else
 fi
 
 #remove config files after installation
-rm "$hdb_param_file"
-rm "$sap_param_file"
-rm /tmp/sap.cfg /tmp/hdb.cfg
+# Remove source files only if they were downloaded to /tmp (do not remove installer-supplied files that are in-place)
+if [[ "$hdb_param_file" == "/tmp/hdb_param.cfg" ]]; then
+  rm -f "$hdb_param_file"
+fi
+if [[ "$sap_param_file" == "/tmp/sap_param.cfg" ]]; then
+  rm -f "$sap_param_file"
+fi
+rm -f /tmp/sap.cfg /tmp/hdb.cfg
