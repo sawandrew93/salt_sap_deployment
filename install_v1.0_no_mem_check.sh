@@ -388,7 +388,7 @@ else
     if [[ -d "$hana_db_dir" ]]; then
         echo "Installing HANA Database services..." | tee -a "$LOGFILE"
         cd "$hana_db_dir"
-        ./hdblcm --batch --configfile="/tmp/hdb.cfg" 2>&1 | tee -a "$LOGFILE"
+        ./hdblcm --batch --configfile="/tmp/hdb.cfg" --ignore=check_min_mem 2>&1 | tee -a "$LOGFILE"
         if [[ $? -eq 0 ]]; then
             echo "Installation completed successfully!" | tee -a "$LOGFILE"
         else
